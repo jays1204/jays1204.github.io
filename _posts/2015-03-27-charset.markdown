@@ -1,0 +1,74 @@
+---
+layout: post
+title:  "Character Set and Character Encoding"
+date:   2015-03-27 23:59:00
+categories: encoding charset
+---
+
+# **Node.js를 사용하면서 나오는 .length 문제점**
+node.js에서는 문자열의 길이를 구하기 위해 length property를 사용합니다.
+
+```
+var str = 'string';
+console.log(str.length);
+```
+console.log를 통해 5의 값이 출력됩니다. 그럼 다음의 경우를 보겠습니다.
+
+```
+var str = '😄';
+console.log(str.length);
+```
+
+이모티콘 하나이니 출력 값은 1이 기대됩니다. 하지만 출력 값은 2입니다.  
+이유는 mdn 페이지의 length 설명에 나오는 다음과 같습니다.
+> This property returns the number of code units in the string. UTF-16, the string format used by JavaScript, uses a
+> single 16-bit code unit to represent the most common characters, but needs to use two code units for less
+> commonly-used characters, so it's possible for the value returned by length to not match the actual number of
+> characters in the string.
+
+length propert는 문자열의 코드 단위의 수를 반환한다고 합니다. 
+이때 코드 단위를 결정하는 것은 자바스크립트가 사용하는 character encoding 방식인 UTF-16(node.js는 UCS2 + UTF-16 subet)에 의해 결정됩니다.  
+설명에도 나와있다시피 UTF-16에서 대부분의 글자들은 하나의 16bit 코드 단위로 표현되지만 덜쓰이는 글자들 중에는 2개의 코드 단위로 표현되는 것도 존재합니다. 그래서 우리가 보고있는 문자열의 길이와 length의 반환값이 달라질 수 있습니다.   
+node.js는 UCS-2와 UTF-16의 일부를 지원합니다. UCS-2와 UTF-16의 가장 큰 차이는 UCS-2는 고정길이 encoding이며 UTF-16은 가변길이라는 것입니다.  
+그렇다면 이제 자주 사용되는 Character Encoding에 대해서 간략히 정리를 하도록 하겠습니다.
+
+# **Unicode**
+character encoding에 대해 알아보기 전에 사전지식으로 반드시 보아야 할 것은 유니코드입니다.  
+유니코드란 character set, 말 그대로 글자 모음집입니다. 
+유니코드는 기본 평면인 BMP와 다른 16개의 평면들로 구성되어 있습니다.
+하나의 평면은 65,536(2의 16제곱)개의 공간(16bit 코드 유닛)을 갖고 각 공간에는 글자가 정의되어 있습니다.  
+범위는 0000 ~ 10FFFF까지입니다.(보통 앞의 00은 생략)  
+표기는 U+16bit값 으로 됩니다. 예를 들어 한글 '가'는 유니코드로 AC00으로 정의되어 있으므로 U+AC00으로 적습니다. 
+이 유니코드를 인코딩(부호화)하여 처리하는 방식에 UTF-8, UTF-16, UCS2 등이 있다.
+
+# **Charater Encoding**
+1. UTF-8  
+웹개발을 하고 있다거나 웹 개발에 관심이 있다면 아마 가장 많이 들어본 단어 중 하나가 아닐까 싶습니다.  
+UTF-8은 가변 길이 인코딩이며 한 글자를 표현하기 위해 최소 1바이트 부터 최대 4바이트를 사용합니다. 보통 한글은 3바이트입니다.  
+가변 길이 인코딩이란 위에서 말씀드렸다시피 1바이트 부터 4바이트까지로 길이가 변하는 것을 의미합니다.  
+UTF-8은 유니코드의 범위에 따라 인코딩 방식이 달라집니다.  
+  - 0000 ~ 007F:
+  0xxxxxxx의 x들에 해당 16진수의 2진수 값을 채우며 1바이트이다.
+  - 0080 ~ 07FF:
+  110xxxxx 10xxxxxx으로 마찬가지로 2진수를 채우며 2바이트이다.
+  - 0800 ~ FFFF:
+  1110xxxx 10xxxxxx 10xxxxxx으로 3바이트이다. (대부분의 한글이다.)
+  - 010000 ~ 10FFFF:
+  11110zzz 10zzxxxx 10xxxxxx 10xxxxxx으로 4바이트이다.
+
+2. UTF-16  
+가변길이의 인코딩이다. BMP에 속하는 유니코드는 16비트로 인코딩이 되며 그이외 유니코드들은 16비트 두개가 합쳐진 32비트로 표현된다.  
+두 개의 16비트로 구성된 방식을 surrogate pair라고 하며 이 pair는 high surrogate와 low surrogate로 구성된다.  
+high surrogate는 U+D800부터 U+DBFF의 값을 갖고 low surrogate는 U+DC00부터 U+DFFF의 값을 갖게 된다.
+
+
+3. UCS2
+BMP만 표현가능하며 정확히 2바이트입니다. UCS-2의 확장이 UTF-16으로서 위에서 말씀드렸다시피 BMP 바깥의 글자를 UTF-16은 표현가능합니다.
+
+# 참조 
+- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length
+- https://github.com/joyent/node/pull/644
+- http://ko.wikipedia.org/wiki/%EC%9C%A0%EB%8B%88%EC%BD%94%EB%93%9C
+- http://ko.wikipedia.org/wiki/UTF-8
+- http://ko.wikipedia.org/wiki/UTF-16
+- http://en.wikipedia.org/wiki/Universal_Character_Set
