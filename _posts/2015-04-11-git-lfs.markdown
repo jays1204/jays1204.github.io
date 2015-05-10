@@ -1,0 +1,31 @@
+---
+layout: post
+title:  "Git LFS"
+date:   2015-04-11 18:03:00
+categories: encoding charset
+---
+
+# **Git**  
+git은 대표적인 DVCS입니다. DVCS는 CVCS와 다르게 local commit이 가능하여 committer마다 reposotory를 개별적으로 관리가능한 장점이 있습니다.  
+또한 git은 이전 commit에 대한 diff 정보만을 저장하는 것이 아닌 commit할 당시의 모든 정보를 담고 있는 snapshot을 저장하게 됩니다.  
+따라서 git을 통한 repository를 오래동안 쓰다보면 큰 파일로 인해 repository의 용량이 매우 커지게 되는 현상이 발생하게 됩니다.  
+오래동안 사용하던 repository를 clone할때는 보통 특정 commit이후 부터 clone 하도록 하는 다음의 command를 사용하기도 합니다.  
+```
+git clone --depth <depth_number> url
+```   
+depth의 숫자만큼 최신 commit만을 clone하게 됩니다.  
+특히나 큰 파일을 repository에 포함할 경우에는 repository크기가 매우 커지게 되어 조금은 골칫거리가 되기도 합니다.   
+이번에 큰 파일을 다루기 위한 git-lfs라는 새로운 기능이 발표되었습니다.  
+
+
+# **Git LFS**  
+git lfs의 문서를 보면 다음의 간략한 설명으로 시작합니다.
+> git lfs의 핵심 개념은 큰 파일을 쓰는 대신에 포인터 파일로 대체한다는 것입니다.
+> 포인터 파일은  (200바이트 보다) 작고 아스키 캐릭터로만 구성되어 있습니다.
+>The pointer file should be small (less than 200 bytes), and consist of only ASCII characters. Libraries that generate
+>this should write the file identically, so that different implementations write consistent pointers that translate to
+>the same Git blob OID. This means:
+
+
+# 참조 
+- https://github.com/github/git-lfs/blob/master/docs/spec.md
