@@ -240,19 +240,23 @@ safsda l`;
 ```
 
 ## 10. Generator
-        함수과 같다. 다만 선언이 다르고 yield가 있다.
-        선은은 다음과 같이 한다.
-        function* name() {};
-        내부에 yield가 있어 name.next();를 통해 순서대로 yield로 값을 돌려줄 수 있다.(state가 유지된다!)
-        물론 return도 쓸 수 있다. return이 있으면 아래 yield가 있어도 next로 접근할 수 없다.
+함수과 같다. 다만 선언이 다르고 yield가 있다.
+선은은 다음과 같이 한다.
+function* name() {};
+내부에 yield가 있어 name.next();를 통해 순서대로 yield로 값을 돌려줄 수 있다.(state가 유지된다!)
+물론 return도 쓸 수 있다. return이 있으면 아래 yield가 있어도 next로 접근할 수 없다.
 
-        11. arrow function
-        파이썬의 람다와 같다.
-        function(a) {
-            return x;
-            }
-            라면 a=>x; 와 같이 쓸 수 있다.
-            var f = x=>x*3;
-            f(3); 은 9를 출력한다.
+## 11. arrow function
+파이썬의 람다와 같다.  
 
+```
+function (a) {
+  return x;
+}
+
+//아래는 같은 로직이다.
+var f = x=>x*3;
+
+console.log('result %d', f(3)); //9를 출력
+```
 
