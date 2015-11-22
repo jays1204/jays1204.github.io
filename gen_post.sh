@@ -11,7 +11,7 @@ META_4='date: '$DATE_D
 META_5='categories: {{category}}'
 META_6="---"
 
-touch './_posts/'$DATE'_'$TITLE'.markdown'
+touch './_posts/'$DATE'-'$TITLE'.markdown'
 echo $META_1 > './_posts/'$DATE'_'$TITLE'.markdown'
 echo $META_2 >> './_posts/'$DATE'_'$TITLE'.markdown'
 echo $META_3 >> './_posts/'$DATE'_'$TITLE'.markdown'

@@ -280,10 +280,86 @@ def sum(a, b=4):
 *는 고정된 인수이외에 값이 전달되면 받는 부분이고 **는 이름이 지정된 식별자 값이 전달된 경우를 의미하며 맨 마지막에 선언되어야 한다.  
 
 ## Lambda
-람다는 이름없는 함수를 저으이할 수 있다.  
+람다는 이름없는 함수를 정의할 수 있다.  
 lambda [a]:[b]는 인수는 a이고 b를 반환하는 함수를 정의하는 것이다.
-
 
 ```python
 a = lambda b: b+2
 ```
+
+## Class
+다음과 같이 정의하며 생성할 수 있다.
+
+```python
+class ItsClass(object):
+  pass
+
+thatclass = ItsClass()
+```
+
+생성자를 통해서 인스턴스 반환한다. arg의 object는 이 클래스가 object를 확장하고 있음을 의미한다.  
+class에는 method내에 선언된 지역 변수, method 밖에서 선언된 클래스 변수가 있다.  
+또한 class에는 예약된 메소드들이 있다.
+
+- __init__
+  : 생성자이다. class내의 method의 모든 첫번째 arg는 self로 시작한다.  
+
+- __add__
+  : 예약된 method이다. +에 대해 overload한다.A + B에서 self를 A로 other를 B로 취급한다.  
+
+- __len__
+  : object의 길이를 출력한다. len(ClassName) 으로 호출한다.
+
+- __getitem__
+  : class[key]를 통해 값을 가져올 수 있게끔 한다. 
+
+- __setitem__
+  : class[key] = value를 통해 값을 저장할 수 있게 한다.
+
+- __sub__
+  : - 연산자에 대해 overloading한다.  
+- __mul__
+  : * 연산자에 대해 overloading한다. 
+- __div__
+  : / 연산자에 대해 overloading한다. 
+
+## File I/O
+file write  
+
+```python
+file = open('filepath', 'w')
+file.write('contents')
+file.close()
+```
+
+file read
+
+```python
+file = open('filepath', 'r')
+print file.read()
+file.close()
+```
+
+close()를 해주어야함을 잊지 말아야 한다.
+
+## import module
+일반적으로 다음과 같이 불러온다. 
+
+```python
+import datetime
+```
+
+모듈 내 특정 함수를 import할 수도 있다.
+
+```python
+from datetime import date
+from random import * #random내의 함수를 전부 다 현재 namespace로 가져온다.
+```
+
+as를 이용하여 이름을 변경할 수 도 있다. 
+
+```python
+import random as rand
+```
+
+
