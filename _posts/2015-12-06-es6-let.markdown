@@ -80,4 +80,61 @@ var를 사용하면 NaN이 출력되지만 let은 not defined 에러를 발생�
 이외에도 같은 이름의 let을 두번 호출하는 것도 temporal dead zone에 의해 에러를 발생시키다.
 
 
-let의 scope으로 인해 memory를 더 적게 사용할 줄 았았는데 같은 for loop에 대해 메모리 비교를 하니 var가 더 적게 사용한다.  이해가 가지 않아 질문을 올렸는데 답이 오면 다시 수정을 하도록 한다. 
+같은 scope내에서는 확실히 let이 덜 memory를 덜 쓰게 된다. 
+
+같은 for loop를 동일하게 돌때 비교하면 아래와 같은 결과를 보여준다. 
+
+
+```javascript
+'use strict';
+
+let pre = process.memoryUsage();
+
+console.log('pre', pre);
+
+function f() {
+  let obj = {x: 12};
+  return obj.x;
+}
+
+function test() {
+  for (let i =0;i<1000000000;i++) {
+    f();
+  }
+  let post = process.memoryUsage();
+  console.log('post', post);
+}
+test();
+```
+
+```javascript
+var pre = process.memoryUsage();
+console.log('pre', pre);
+function f() {
+  var obj = {x: 12};
+  return obj.x;
+}
+function test() {
+  for (var i =0;i<1000000000;i++) {
+    f();
+  }
+  var post = process.memoryUsage();
+  console.log('post', post);
+}
+test();
+```
+
+
+결과는 아래와 같이 let이 덜 쓰는 것이 보이게 된다.  
+
+```bash
+$ node let.js
+pre { rss: 20791296, heapTotal: 9275392, heapUsed: 3567928 }
+post { rss: 21594112, heapTotal: 9275392, heapUsed: 4425544 }
+```
+
+```bash
+$ node var.js
+pre { rss: 20783104, heapTotal: 9275392, heapUsed: 3567912 }
+post { rss: 24322048, heapTotal: 10307328, heapUsed: 4445888 }
+```
