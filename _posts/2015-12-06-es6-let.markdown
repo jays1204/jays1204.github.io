@@ -1,0 +1,83 @@
+---
+layout: post
+title: " ES6 let keyword "
+date: 2015-12-06 22:18:55
+categories: {{node.js}}
+---
+
+## let keyword
+ES6에 들어서 생긴 새로운 기능 중 하나는 바로 let이다.  
+let은 var와 같이 변수를 선언하고자 할 때 사용된다.  
+다만 var와는 다른 몇 가지 차이점이 존재한다.  
+
+## scope
+var는 선언된 함수의 전체 scope안에서 사용 가능하다. 하지만 let은 선언된 block scope {}내에서만 사용할 수 있다.  
+아래는 예제이다.  
+
+```javascript
+function test() {
+  console.log('var i: %d', i);
+  for (var i =0; i <10;i++) {
+    console.log('i is %d', i);
+  }
+}
+test()
+``` 
+
+위의 코드는 아래 예제를 출력한다.  
+
+```bash
+var i : NaN
+i is 0
+i is 1
+...
+i is 9
+```  
+
+하지만 let을 사용할 경우에는 달라진다.  
+
+```javascript
+function test() {
+  console.log('let i: %d', i);
+  for (let i =0; i <10;i++) {
+    console.log('i is %d', i);
+  }
+}
+test()
+``` 
+
+아래와 같은 메세지가 출력된다.  
+
+```bash
+console.log('let i: %d', i);
+ReferenceError: i is not defined
+```
+
+let은 {}안에서만 유효하여 {}밖에서 접근이 불가하지만 var는 선언된 함수 내에서 유효하므로 출력 값이 다르게 나타난다.  
+
+## hoisting  
+var, let 모두 선언시에 자동으로 유효범위의 최상단으로 올려져 선언된다.  
+하지만 여기서도 차이점이 존재한다.  
+
+```javascript
+function foo() {
+  console.log('var i is %d', i);
+  var i = 0;
+}
+```  
+
+아래는 let을 사용한다.   
+
+```javascript
+function foo() {
+  console.log('let i is %d', i);
+  let i = 0;
+}
+```
+
+var를 사용하면 NaN이 출력되지만 let은 not defined 에러를 발생시킨다.  
+이를 let의 temporal dead zone이라 한다.  
+이외에도 같은 이름의 let을 두번 호출하는 것도 temporal dead zone에 의해 에러를 발생시키다.
+
+
+let의 scope으로 인해 memory를 더 적게 사용할 줄 았았는데 같은 for loop에 대해 메모리 비교를 하니 var가 더 적게 사용한다.  이해가 가지 않아 질문을 올렸는데 답이 오면 다시 수정을 하도록 한다. 
