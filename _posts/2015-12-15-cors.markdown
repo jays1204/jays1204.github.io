@@ -1,0 +1,68 @@
+---
+layout: post
+title: " CORS "
+date: 2015-12-15 17:48:24
+categories: {{web}}
+---
+
+## **CORS**
+CORS는 cross origin resource sharing의 약자로 SOP에 위배되어도 XHR에 의해 resource를 사용할 수 있는 것을 의미한다.  
+
+## **SOP**
+SOP는 same origin policy의 약자로 하나의 origin의 document나 script에서 다른 origin의 resoucr를 ajax를 이용하여 가져오는 것을 제한하는 것을 의미한다.   
+origin의 비교에는 동일 호스트, 동일 프로토콜, 동일 port가 있다.  
+
+- example
+  - http://www.example.com/index.html 에서 아래의 주소에 대해 요청을 보낼 수 있는지 여부를 본다.  
+    1. http://www.exmaple.com/hi.html - Success
+    2. https://www.exmaple.com/hi.html - Fail
+    3. http://www.exmaple.com:9876/hi.html - Fail
+    3. http://www.exmaple2.com/hi.html - Fail
+
+## **Cross Origin Resource Sharing**
+CORS는 웹서버가 허용을 한다면 SOP에 어긋나더라도 XHR로 resource를 사용할 수 있도록 허락해주는 것을 의미한다.  
+
+CORS의 요청에는 두가지 종류가 있다.  
+  1. Simple GET & POST Request  
+  1.1 website의 form에서 보내는 요청과 유사하다.  
+  2.  PUT과 같은 더 복잡한 다른 HTTP요청, 추가 헤더가 있는 요청, 기타
+
+## **Simple Request**
+simple request는 GET, HEAD 또는 POST만 사용한다. POST를 이용한다면 server에 보낼 request의 content-type은 다음 세가지만 허용된다.   
+1. application/x-www-form-urlencoded  
+2. multipart/form-data  
+3. text/plain
+
+그리고 custom header를 허용하지 않는다.
+
+simple request에 대해 cross-domain을 허락하기 위해서는 서버는 Access-Control-Allow-Origin 헤더 응답에 추가해야 한다.   
+이 헤더는 request의 origin과 같거나 허용하길 원하는 origin을 가리키면 된다. 
+
+서버의 응답 값이 아래와 같다면   
+
+```javascript
+Access-Control-Allow-Origin: http://example.com
+```
+
+http://example.com으로 부터 온 요청은 승인될것이다. 
+
+## **preflighted CORS request**
+조금 더 복잡한 요청에 대해 브라우저는 OPTION method를 통해 "preflighted"요청을 먼저 할 것이다. 
+
+이 요청은 기본적으로 서버에 full request가 가능한지에 대해 물어보는 것이다.  
+서버는 preflighted request에 대해 아래의 값들로 응답을 한다.  
+  1. Access-Control-Allow-Origin: 허용되는 origin  
+  2. Access-Control-Allow-Methods: 허용되는 method의 종류 목록으로 ,(comma)로 구분된다.  
+  3. Access-Control-Allow-Headers: 허용되는 custom header의 목록으로 ,(comma)로 구분된다.  
+  4. Access-Control-Max-Age: 브라우저에서 이 preflighted request에 대한 응답 값을 캐싱할 시간으로 초단위이다.   
+
+
+응답 값에 의해 원래 보내고자 하는 요청이 허용됨을 알게 된다면 원래 요청을 서버에 보내게 된다.  
+
+즉 간단한 요청은 한번의 요청으로 마무리가 되고 나머지 complex요청은 2번의 요청이 오가게 된다.  
+
+
+# References
+  - http://www.staticapps.org/articles/cross-domain-requests-with-cors
+  - http://www.w3.org/TR/cors/
+  - http://www.html5rocks.com/en/tutorials/cors/?redirect_from_locale=ko
