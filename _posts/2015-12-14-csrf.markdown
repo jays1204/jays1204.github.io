@@ -1,0 +1,112 @@
+---
+layout: post
+title: " CSRF "
+date: 2015-12-14 10:52:08
+categories: {{web, node.js}}
+---
+
+## **CSRF**
+CSRF란 무엇인가???
+Cross Site Request Forgery의 약자이다.  실제 사용자가 의도하지않은 Request를 보내는 방식의 취약점 공격 방식을 의미한다.  
+XSS와는 다르다. XSS는 사용자를 믿는 점에 대한 취약점을 노리는 반면 CSRF는 사용자의 browser를 신뢰하는 것에 대한 취약점을 노려서 공격하는 방식이다.  
+
+- example scenario   
+  1. 사용자 P는 A사이트에 가입이 되어있고 로그인을 유지하고 있다.
+  2. 사용자 P가 악성 공격을 하는 사이트 B에 접속을 하였다.
+  3. 사이트 B는 스크립트를 통해 P몰래 A사이트에 악의적인 요청을 보낸다.
+  4. 사이트 A는 사용자 P의 요청이므로 정상적으로 해당 요청을 처리한다. 
+
+## **Defence CSRF**
+CSRF 공격을 막기 위해서는 추가적인 auth 정보를 포함하게끔 한다.  
+
+1. **Synchronizer token pattern**  
+동기화된 토큰 패턴은 CSRF에 대해 방어할 요청에 대해 유니크하면서 보안성있는 토큰을 parameter로 포함하여 보내게끔 하는 방식이다.  
+보통은 서버에서 이미 검증된 토큰을 HTML의 form에 포함되도록 위치한다.   
+토큰은 유니크하고 예측불가능함을 보장하는 방법으로 만들어진다.  
+따라서 공격자는 인증을 위한 정확한 토큰을 알 수 없다.
+SOP정책에 의해 origin이 달라도 write(POST, UPDATE, DELETE)는 허용되지만 GET은 보통은 허용되지 않는다.  따라서 GET은 일반적으로 신경쓰지 않는다. 그리고 GET은 상태를 변경하지 않는 safe method로 사용하기때문에 신경쓰지 않는 것도 있다.
+
+
+2. **Cookie-To-Header Token**  
+Same-origin 정책을 이용한 방법이다.  
+특정 domain의 cookie는 특정 domain에 있을때만 읽을 수 있고 다른 domain에서는 읽을 수 없다. 
+따라서 다음과 같이 진행한다.  
+사용자가 로그인을 하면 웹 어플리케이션은 사용자 세션정보에 대하 동일성을 유지하는 랜덤한 토큰을 생성한다.
+클라이언트의 javascript는 토큰의 값을 읽고 그것을 각각의 http request에 대해 custom header로 추가한다.  
+정상적인 요청인 아닌 다른 악성 js등은 cookie를 읽지 못하므로 valid한 요청을 할 수 없게 된다.  
+
+3. **JSON API 사용하기**  
+기본적으로 모든 XHR전송은 브라우저에서 CORS 조건을 충족시켜야 진행할 수 있다. 
+content-type='application/json'이라면 기본적인 form으로는 해당 요청을 진행할 수 없다. XHR을 이용하여 해당 요청을 진행해야 하므로 CORS 조건을 만족시켜야 한다.
+따라서 CORS설정이 원하는 origin에 대해서 원하는 설정으로 되어있다면 CSRF에 대비할 수 있다.
+
+
+## **CSRF for express.js**
+CSRF를 node.js의 express.js에 적용하려면 어떻게해야 하나?   
+node.js에는 CSRF 공격에 대비하기 위한 라이브러리들이 제공되고 있다.  
+그중 가장 많이 사용하는 libraray는 csrf(https://www.npmjs.com/package/csurf)이다. 이 library를 이용하여 express.js를 위해 만들어진 csurf를 사용하여 CSRF 공격에 대해 방어하도록 한다.  
+
+## **CSURF**
+*이 라이브러리는 express.js를 쓰고 있으며 cookie-parser 등을 통해 이미 쿠키나 세션을 사용하고 있음을 가정한다.*  
+사용법은 매우 간단하다.  
+
+
+1. **token secret save**  
+  - token사용을 위한 사용자별 token secret을 쿠키에 저장 설정을 하는  단계이다.  
+
+    ```javascript 
+    var csurf = require('csurf')
+    , csrfProtection = csurf({cookie: true}); //set save token secret to user cookie or req.session
+
+    ```
+  - csrfProtection 미들웨어를 사용하는 router api에서 req.cookies의 값을 출력하면 다음과 같은 값이 포함된다.   
+
+    ```bash
+    { _csrf: 'xuYfug07IqrUBCdgOZ3ziS3n'}
+    ``` 
+
+2. **add csrf middleware**   
+  - middleware를 추가하기  
+
+    ```javascript
+    //add csrf token to render page
+    var csurf = require('csurf')
+      , csrfProtection = csurf({cookie: true}); //set save token secret to user cookie or req.session
+
+    router.route('your_uri_path')
+      .get(csrfProtection, function(req, res, next) {
+        return res.render('page.hmtl', { csrfToken: req.csrfToken()});
+      });
+
+    //csrfProection middleware check that user send valid token
+    router.route('your_uri_path')
+      .post(csrfProtection, function(req, res, next) {
+        res.send();
+      });
+    ```
+  - 위의 코드처럼 csrf middleware를 html form 전송이 가능한 API마다 미들웨어로 넣어주기만 하면 된다. 
+
+3. **error handling**  
+
+    ```javascript
+    //error handler
+    app.use(function(err, req, res, next) {
+      if (err.code !== 'EBADCSRFTOKEN') return next(err)
+   
+      // handle CSRF token errors here 
+      res.status(403)
+      res.send('form tampered with')
+    });
+    ```
+
+## **적용 대상**
+   xhr이 아닌 form전송이 가능한 모든 request에 대해 적용해야 한다.  
+   form element에서 허용하는 enctype(content-type)은 다음 2가지 이다.   
+      1. application/x-www-form-urlencoded   
+      2. multipart/form-data
+
+- References  
+  - https://www.google.co.kr/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&ved=0ahUKEwj4z7flmNrJAhUEJpQKHaLnAQ4QFgggMAE&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FCross-site_request_forgery&usg=AFQjCNHDT32GDE_983s57iJyXLu2jtjRhQ
+  - https://www.npmjs.com/package/csrf
+  - https://www.npmjs.com/package/csurf
+  - https://developer.mozilla.org/ko/docs/Web/Security/Same-origin_policy
