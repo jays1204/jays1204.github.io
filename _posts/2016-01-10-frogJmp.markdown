@@ -1,0 +1,26 @@
+---
+layout: post
+title: " frog Jump "
+date: 2016-01-10 16:26:04
+categories: {{node.js, codillity}}
+---
+
+## FrogJmp  
+개구리는 도로의 반대편으로 건너고 싶어한다.  현재 개구리의 위치는 X, 가고자 하는 위치는 Y보다 크거나 같다.  개구리는 항상 D 길이 만큼 점프를 한다.  
+개구리가 원하는 곳에 도달하기 위해 점프할 때 가장 작은 점프 수를 구하라.  
+
+공간, 시간 복잡도는 모두 O(1)이다.  
+
+
+## Solution  
+
+```javascript
+function solution(X, Y, D) {
+  var step = (Y-X) / D;
+  return Math.ceil(step);
+}
+
+```
+
+# References  
+- https://codility.com/programmers/task/frog_jmp/
