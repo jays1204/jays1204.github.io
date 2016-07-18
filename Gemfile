@@ -14,4 +14,4 @@ gem 'jemoji', '0.3.0'
 gem 'jekyll-mentions', '0.1.3'
 gem 'jekyll-redirect-from', '0.4.0'
 gem 'jekyll-sitemap', '0.5.1'
-gem 'github-pages', '22'
+gem 'github-pages', group: :jekyll_plugins
