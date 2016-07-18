@@ -1,8 +1,8 @@
 ---
 layout: post
-title: " async & await "
+title: async & await
 date: 2016-07-18 23:36:54
-categories: {{es7, node.js}}
+categories: es7, node.js
 ---
 
 ## Async & Await  
