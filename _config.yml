@@ -10,6 +10,14 @@ markdown: kramdown
 redcarpet:
   extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "strikethrough", "superscript", "with_toc_data", "tables"]
 
+github: [metadata]
+kramdown:
+  input: GFM
+  hard_wrap: false
+gems:
+- jekyll-coffeescript
+- jekyll-paginate
+
 highlighter: rouge
 # Build settings
 permalink: pretty
