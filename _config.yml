@@ -6,7 +6,7 @@ baseurl: ""
 url: "http://jays1204.github.io"
 twitter_username: jays1204
 github_username:  jays1204
-markdown: redcarpet
+markdown: kramdown
 redcarpet:
   extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "strikethrough", "superscript", "with_toc_data", "tables"]
 
