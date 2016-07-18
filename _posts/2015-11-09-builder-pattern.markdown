@@ -2,7 +2,7 @@
 layout: post
 title: " 빌더 패턴 "
 date: 2015-11-09 22:02:51
-categories: {{pattern}}
+categories: pattern
 ---
 
 # Builder Pattern
@@ -29,7 +29,7 @@ class를 사용하도록 리팩토링을 하던 중 생성자에 argument가 너
 
 ## example
 
-```javascript
+~~~javascript
 class User {
   constructor(builder) { //director
     this.name = builder.name;
@@ -64,7 +64,7 @@ var concreteBuilder = User.createBuilder('jays', 29, 'KR');
 var manProduct = concreteBuilder.setGender('man').build();
 var womanProduct = concreteBuilder.setGender('woman').build();
 
-```
+~~~
 concreteBuilder가 말그대로 Concret Builder로서 생성 과정의 기본 값을 유지해 나아가며 표현이 조금 다른 데이터를 추가 한 후 마지막에 build()를 통해 director인 User에 값을 넘겨주어 Product를 생성한다.  
 여기서 Product Class를 생략하였다. 
 

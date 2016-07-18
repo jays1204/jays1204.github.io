@@ -2,7 +2,7 @@
 layout: post
 title: " TapeEquilibrium Problem "
 date: 2016-01-11 13:57:28
-categories: {{node.js, codillity}}
+categories: node.js, codillity
 ---
 
 ## Problem of TapeEquilibrium  

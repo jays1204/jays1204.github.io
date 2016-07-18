@@ -2,7 +2,7 @@
 layout: post
 title: " MaxCounters "
 date: 2016-01-13 14:30:19
-categories: {{node.js, codillity}}
+categories: node.js, codillity
 ---
 
 ## Problem  

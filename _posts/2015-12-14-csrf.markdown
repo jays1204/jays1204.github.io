@@ -2,7 +2,7 @@
 layout: post
 title: " CSRF "
 date: 2015-12-14 10:52:08
-categories: {{web, node.js}}
+categories: web, node.js
 ---
 
 ## **CSRF**

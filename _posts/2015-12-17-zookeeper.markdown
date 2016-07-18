@@ -2,7 +2,7 @@
 layout: post
 title: " Zookeeper overview"
 date: 2015-12-17 18:24:56
-categories: {{zookeeper}}
+categories: zookeeper
 ---
 
 ## **Zookeeper Overview**

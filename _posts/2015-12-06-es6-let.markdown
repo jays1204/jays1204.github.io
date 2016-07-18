@@ -2,7 +2,7 @@
 layout: post
 title: " ES6 let keyword "
 date: 2015-12-06 22:18:55
-categories: {{node.js}}
+categories: node.js
 ---
 
 ## let keyword

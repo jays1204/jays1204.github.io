@@ -2,7 +2,7 @@
 layout: post
 title: " disjoint set "
 date: 2015-12-06 23:34:24
-categories: {{algorithm, ds}}
+categories: algorithm, ds
 ---
 
 # Disjoint set

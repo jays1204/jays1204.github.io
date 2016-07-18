@@ -2,7 +2,7 @@
 layout: post
 title: " Perm Check Problem "
 date: 2016-01-12 15:19:30
-categories: {{node.js, codillity}}
+categories: node.js, codillity
 --- 
 
 ## Problem  

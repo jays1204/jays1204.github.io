@@ -2,7 +2,7 @@
 layout: post
 title: " CORS "
 date: 2015-12-15 17:48:24
-categories: {{web}}
+categories: web
 ---
 
 ## **CORS**

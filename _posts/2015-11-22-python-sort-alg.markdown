@@ -2,7 +2,7 @@
 layout: post
 title: " Python sort algorithm "
 date: 2015-11-22 22:28:04
-categories: {{python}}
+categories: python
 ---
 
 # Python Sort Algorithm

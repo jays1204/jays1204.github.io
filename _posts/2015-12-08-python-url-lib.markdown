@@ -2,7 +2,7 @@
 layout: post
 title: " python url library "
 date: 2015-12-08 23:58:06
-categories: {{python}}
+categories: python
 ---
 
 # Python url library

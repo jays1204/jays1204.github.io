@@ -2,7 +2,7 @@
 layout: post
 title: " netstat status "
 date: 2015-11-30 10:42:46
-categories: {{linux}}
+categories: linux
 ---
 
 # netstat
