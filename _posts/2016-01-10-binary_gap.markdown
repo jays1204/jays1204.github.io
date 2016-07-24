@@ -2,7 +2,7 @@
 layout: post
 title: " Max Binary Gap "
 date: 2016-01-10 15:39:07
-categories: node.js, algorithm, codillity
+categories: node.js algorithm codillity
 ---
 
 ## Max Binary Gap  

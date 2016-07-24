@@ -2,7 +2,7 @@
 layout: post
 title: " OddOccurrencesInArray "
 date: 2016-01-10 15:49:08
-categories: node.js, codillity
+categories: node.js codillity
 ---
 
 ## OddOccurrencesInArray  

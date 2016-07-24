@@ -11,8 +11,8 @@ email: realjays1204@gmail.com
 description: "jays blog. 매일 매일 무언가 잡지식이라도 쓰는 것을 목표로 함."
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://jays1204.github.io" # the base hostname & protocol for your site
-twitter_username: jays1204
 github_username:  jays1204
+github: jays1204
 
 # Build settings
 markdown: kramdown

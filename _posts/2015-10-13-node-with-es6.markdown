@@ -2,7 +2,7 @@
 layout: post
 title:  Node.js With ES6
 date:   2015-10-13 21:00:00
-categories: Node.js
+categories: node.js
 ---
 
 # Node.js 4.x에서 정식 기능으로 채택된 ES6기능들

@@ -2,7 +2,7 @@
 layout: post
 title: " PermMissingElem "
 date: 2016-01-10 16:09:14
-categories: node.js, codillity
+categories: node.js codillity
 --- 
 
 ## PermMissingElem  

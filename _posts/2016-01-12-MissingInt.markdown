@@ -2,7 +2,7 @@
 layout: post
 title: " MissingInteger Problem "
 date: 2016-01-12 13:51:16
-categories: node.js, algorithm
+categories: node.js algorithm
 ---
 
 ## Problem  

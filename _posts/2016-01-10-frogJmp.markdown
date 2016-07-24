@@ -2,7 +2,7 @@
 layout: post
 title: " frog Jump "
 date: 2016-01-10 16:26:04
-categories: node.js, codillity
+categories: node.js codillity
 ---
 
 ## FrogJmp  

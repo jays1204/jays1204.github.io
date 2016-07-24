@@ -2,7 +2,7 @@
 layout: post
 title:  Node.js Syntax check 'return' error
 date:   2015-10-29 23:45:00
-categories: Node.js
+categories: node.js
 ---
 
 # Node.js 4.2 의 새 기능
