@@ -6,9 +6,9 @@ DATE_D=`date +"%Y-%m-%d %H:%M:%S"`
 
 META_1="---"
 META_2="layout: post"
-META_3="title:  \" {{title}} \""
+META_3="title:  \" title \""
 META_4='date: '$DATE_D
-META_5='categories: {{category}}'
+META_5='categories: category'
 META_6="---"
 
 touch './_posts/'$DATE'-'$TITLE'.markdown'
