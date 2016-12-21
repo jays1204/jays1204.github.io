@@ -1,0 +1,78 @@
+---
+layout: post
+title: " rx.js with node.js - 2 "
+date: 2016-12-21 19:38:34
+categories: rx.js node.js
+---
+
+## rx.js request callback hell 탈출하기 
+*이 문서는 [@staltz의 rx.js소개 gist](https://gist.github.com/staltz/868e7e9bc2a7b8c1f754) 를 참고하여 작성되었다.*   
+[이전 글](http://jays1204.github.io/rx.js/node.js/2016/12/20/rxjs-1.html)에 이어서 진행한다.  
+이전 글에서는 request를 보내는 코드를 보았다. 다만 코드에 불필요한 callback depth가 생기어 가독성을 해치는 코드가 되었다.  
+이번에는 간단한 리퀘스트를 보내는 콜백 헬이 줄어든 코드를 만든다.  
+
+```code
+var Rx = require('rx');
+var request = require('request-promise');
+
+var requestStream = Rx.Observable.just('YOUR_URL');
+
+//map을 통해 각 requestUrl의 리퀘스트에 대한 스트림을 가리키는 값을 얻을 수 있다.
+var responseMetastream = requestStream.map((requestUrl) => {
+    var options = { method: "GET", url: requestUrl};
+    return Rx.Observable.fromPromise(request(options));
+});
+
+//metaStream은 위에서 생성된 reuqest에 대한 stream을 가리키므로 이에 대해서 subscribe하여 응답 값을 받아야 한다.
+responseMetastream.subscribe((metaStream) => {
+    metaStream.subscribe((res) => {
+        console.log('res', res);
+        });
+    });
+```
+
+```Rx.Observable.fromPromise```는 promise 객체로 부터 observable을 만들어 낸다.  
+이전 코드에서 ```create()```를 통해 만들며 코드가 길어졌던 부분은 없애 주었다.   
+또한 requestStream에 대해 subscribe를 호출하지 않고 map을 호출한다.  
+
+```map()```은 기존에 Array에서 쓰던 map과 같다. 
+map을 이용해 observable 리스트의 각 item에 대해 map의 인자로 사용된 function을 적용하여 새로운 item을 갖는 observable 리스트로 만든다.   
+위의 코드에서는 map을 이용하여 기존에 requestUrl이란 item을 request를 보내는 observable 리스트로 만들어서 리턴하고 있다.   
+
+이를 통해 만들어 진것이 responseMetastream이다.  
+metaStream이라 이름 지어진 이유는 이 변수는 observable이 아닌 observable을 가리키는 observable을 가리키는 변수이기 때문이다.  
+
+따라서 responseMetastream에 대해 subscribe하면 emit되는 값은 우리가 map을 통해서 만든  
+request를 보내는 observable이므로 이에 대해서도 subscribe하여 응답 값을 받아야 한다.  
+
+## metaStream 탈출 하기 
+아직까지도 metaStream에 대한 subscribe를 위해 callback이 하나 더 생겨 코드의 가독성을 떨어뜨리고 있다.  
+이제는 ```map```이 아닌 ```flatMap```을 이용하여 코드의 가독성을 높일 것이다.  
+
+```code
+var Rx = require('rx');
+var request = require('request-promise');
+
+var requestStream = Rx.Observable.just('YOUR_URL');
+
+var responseStream = requestStream.flatMap((requestUrl) => {
+    var options = { method: "GET", url: requestUrl};
+    return Rx.Observable.fromPromise(request(options));
+});
+
+responseStream.subscribe((res) => {
+    console.log('res', res);
+});
+```
+
+callback이 줄어듬과 함께 가독성이 높아졌다.  
+```flatMap```은 map과 유사하다.  
+flatMap은 observable 리스트에 들어있는 각각의 observable 리스트를 하나의 observable 리스트로 머지해준다.  
+map과 같은 기능을 하되 n+1차원의 배열을 n차원으로 만들어준다고 정도로 생각하면 될거 같다.  
+위의 코드에서 보면 flatMap을 통해 request observable을 가리키는 observable이 아닌 request observable을 바로 얻어내어 subscribe하여 응답 값을 받을 수 있다.
+
+
+## References 
+ - http://stackoverflow.com/questions/28107986/what-does-the-map-method-mean-in-rxjs
+ - https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/core/operators/select.md
+ - https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/core/operators/selectmany.md
