@@ -50,3 +50,27 @@ c.  다음의 목록을 각 카프카 서버마다 차례대로 수행한다. �
 ```  
 
 - 카프카 startup 
+
+
+### 추가 사항(오프셋 마이그레이션)  
+기본적으로 0.9 이전 버젼은 토픽의 오프셋이 주키퍼에 저장되어있다.  
+이것이 0.10으로 가면서 카프카에 저장되는 것으로 변경되었다.   
+
+다음을 따라 기존 오프셋을 마이그레이션 할 수 있다.  
+- 컨슈머 설정 수정 및 재시작   
+
+```  
+  offsets.storage=kafka 
+  dual.commit.enabled=true
+```    
+
+- 이상 없으면 다시 컨슈머 설정 수정 및 재시작  
+
+```  
+  dual.commit.enabled=false
+```    
+
+
+
+- References
+  - https://kafka.apache.org/documentation/#offsetmigration
