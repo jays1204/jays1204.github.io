@@ -1,0 +1,44 @@
+---
+layout: post
+title: " ML study Week 02 "
+date: 2018-03-18 17:19:39
+categories: ML MachineLearning Classification
+---
+
+## Logistic classification  
+이전 강의에서는 어떤한 범위의 숫자를 예측하는 Linear regression을 다루었다.  
+예를 들면 H(x) 는 -100 ~ 400 의 범위를 예측하는 모델로 Linear regression으로 동작한다.   
+이번에는 y값이 두 개, 즉 binary인 경우에 대해 예측해는 binary classification 을 볼 차례이다.  
+
+   - Hypothesis  
+   기존의 H(x) = Wx + b를 그대로 사용할 경우 x의 값에 따라 예측되는 값인 H(x)의 값이 0보다 작거나 또는 1보다 클 수 있다.   
+   이는 우리가 찾고자 하는 binary classification 의 목적과는 다르므로 이를 보완할 필요가 있다.  
+   함수를 하나 덧 씌워 H(x)의 값을 0 ~ 1 사이로 만들어주어야 한다.   
+   이때 덧씌울 함수를 g(z)라고 칭하고 보통 sigmoid라 불리우는 함수를 사용한다.  
+   g(z) = 1 / (1 + e^-z) 함수를 사용한다.   
+     - ![sigmoid](https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Logistic-curve.svg/1200px-Logistic-curve.svg.png)  
+
+
+  위와 같이 sigmoid를 덧씌워서 hypothesis를 만들면 예측 결과 값이 0 ~ 1 사이에 머물게 되어 우리가 원하는 binary classification을 적용할 수 있다.   
+  이후부터는 sigmoid에서 사용되는 x축인 z에 대해 z = Wx 로 정의하여 H(x) = g(z)로 사용한다.  
+
+
+## Logistic Regression의 cost 함수 설명  
+이제 새로 만든 Hypothesis 가 좋은 모델인지 알기 위해 Cost를 구해야 한다.  
+하지만 위의 sigmoid로 만든 Hypothesis에 대해 기존 cost function을 적용하면 이 그래프의 모양은 삐뚤빼둘한 모양이 되어 gradient descent algorithm을 적용하기 어려워 진다.  
+우리는 가장 작은 값인 global minimum을 찾고 싶지만 엎어진 밥그릇 모양이 아닌 삐뚤빼둘한 그래프에서는 시작점에 따라 각기 다른 근처의 최소점인 local minimum을 구하게 되기 떄문이다.   
+이를 보완하기 위해 새로운 cost function을 사용한다.  
+
+  -  코스트함수  
+    - y=1이면 -log(H(x)) 사용   
+    - y=0이면 -log(1-H(x)) 사용    
+
+위의 함수의 경우 그래프를 보면 y=1인 값에 가까워질수록 0이 되고 아닐 수록 값이 커지게 되거나 또는 y=0인 값에 가까워질수록 0이 되고 아닐수 록 값이 커지는 그래프를 볼 수 있다.  
+  
+최종적으로 C(H(x), y)= -y*log(H(x)) - (1 - y)log(1-H(x))  가 된다.  
+
+
+
+### References  
+  - https://www.youtube.com/watch?v=PIjno6paszY&feature=youtu.be  
+  - https://www.youtube.com/watch?v=6vzchGYEJBc&feature=youtu.be
