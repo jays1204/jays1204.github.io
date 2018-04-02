@@ -27,23 +27,25 @@ process.nextTick(function A() {
         log(1);
         process.nextTick(function D() { log(2); });
         process.nextTick(function E() { log(3); });
-        });
+    });
     process.nextTick(function C() {
         log(4);
         process.nextTick(function F() { log(5); });
         process.nextTick(function G() { log(6); });
-        });
     });
+});
 
 setTimeout(function timeout() {
     console.log('TIMEOUT FIRED');
-    }, 0)
+}, 0)
 
 ```
 
 출력은 다음과 같다.   
-1, 2, 3, 4, 5, 6, TIMEOUT FIRED  
-nextTick을 읽다보니 먼저 실행해야 할 것들이 있으므로 순서대로 출력을 한다.  
+1, 4, 2, 3, 5, 6, TIMEOUT FIRED   
+*@Isitea 님께서 댓글로 잘못 작성된 부분을 알려주시어 늦게나마 내용을 수정합니다.*  
+nextTick의 경우 event loop로 들어가기 이전에 코드가 바로 실행되기 때문에 위와 같은 출력이 발생합니다.
+
 'TIMEOUT FIRED'은 setTimeout이므로 큐에 넣어서 차례를 기다리므로 마지막에 실행된다.  
 
 아래는 setImmediate이다.   
