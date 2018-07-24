@@ -11,4 +11,14 @@
   <link rel="stylesheet" href="{{ site.baseurl }}/style.css">
   <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
   <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ "/feed.xml" | prepend: site.baseurl | prepend: site.url }}">
+
+  <script>
+    (function(d,a,b,l,e,_) {
+      d[b]=d[b]||function(){(d[b].q=d[b].q||[]).push(arguments)};e=a.createElement(l);
+      e.async=1;e.charset='utf-8';e.src='//static.dable.io/dist/plugin.min.js';
+      _=a.getElementsByTagName(l)[0];_.parentNode.insertBefore(e,_);
+    })(window,document,'dable','script');
+dable('setService', 'dable.io');
+dable('sendLog');
+  </script>
 </head>
