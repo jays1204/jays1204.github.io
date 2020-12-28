@@ -1,0 +1,145 @@
+---
+layout: post
+title: " Rust Tutorial 02 - Ownership "
+date: 2020-12-28 19:26:50
+categories: rust tutorial ownership
+---
+
+# Ownership  
+Heap과 Stack에 대한 이야기가 잠시 나온다.  
+작성한 코드를 컴파일 하여 실행시키면 코드는 Stack, Heap, Code, Data 영역에 올라가게 된다.  
+이 챕터에서는 Stack과 Heap에 대해서만 알면된다.  
+간단히 말하면 미리 할당될 사이즈를 알아서 컴파일시 메모리에 할당되는 변수는 Stack에, 할당할 메모리 사이즈를 미리 예측하지 못하여 runtime 시점에 메모리를 할당해야하는 변수는 Heap에 위치한다고 생각하면 편리하다.  
+
+그리고 Heap에 있는 데이터를 가져오는 건 Stack에 있는 데이터를 가져올 때 보다 느리다. Stack은 있는 데이터를 pop해서 바로 가져오지만 heap은 pointer를 참고하여 데이터를 가져와야 하므로 stack보다 조금 더 느리다.  
+
+
+
+## Ownership Rule  
+
+Rust는 메모리 관리를 위해 변수에 대해 Ownership rule을 적용한다.  
+여기서는 메모리는 신경쓰지 말고 rule에 대한 제약사항만 알고가도 충분하다고 생각한다.  
+C언어를 통해 malloc, free, 포인터의 개념을 알고 있다면 이부분은 매우 쉽게 이해할 수 있으리라 본다.  
+
+
+
+Rust의 Ownsership Rule 3가지 
+
+1. 러스트의 각각의 값은 해당값의 오너(owner)라고 불리우는 변수를 갖고 있다.
+2. 한번에 딱 하나의 오너만 존재할 수 있다.
+3. 오너가 스코프 밖으로 벗어나는 때, 값은 버려진다(dropped).
+
+
+Rust의 Variable Scope
+기본적으로 변수의 scope 범위는 {} 안으로 한정되고 이 scope를 벗어나면 자동으로 메모리에서 해제된다.  
+
+Rust에서 변수의 메모리 관리를 위해 크게 2가지 동작이 발생한다. 
+
+- drop
+	+ 러스트는 } 괄호가 닫힐때 자동적으로 (내부적으로)drop 함수를 호출하여 메모리의 공간을 비운다.   
+- move
+	+ Heap을 사용하는 변수에 대해서, 첫번째로 선언된 변수를 두번째 선언된 변수에 할당할때 move가 발생한다.   
+		+ Stack에 쌓인 정수형 변수는 move가 아닌 바로 값이 Copy된다.   
+		+ 컴파일 시점에 메모리 사이즈를 정할 수 있어서 스택에 올릴수 있으면 Copy가 가능하다. 그렇지 않은 것은 Copy가 안되며 모두 move 된다.  
+	+ shallow copy와 다른 점은 첫번째 변수에 대해선 무효화가 발생한다는 점이다. 따라서 첫번째 변수는 사용할 수 없게 된다.  
+	+ 이와 같은 move를 통해 double free가 일어나지 않게 된다.  
+
+
+
+함수를 호출하며 값을 넘기는 것 역시 변수에 대입하는 것과 유사하다.  
+앞서 말한 규칙대로 move 또는 copy가 될것이란 이야기다.  
+즉 함수 호출에 쓰인 변수는, 스택만 사용하는 경우 copy 이므로 여전히 호출부 함수 안에서 사용가능하지만 힙을 사용하는 변수라면 move이므로 해당 값은 더이상 호출부 함수에서 사용할 수 없게 된다.  
+
+
+## Rust References (참조)
+
+함수 호출시 값을 넣어서 호출하면 변수의 값이 move되어 소유권을 잃어버리게 된다.  
+소유권을 잃지 않고 함수에서 특정 값을 사용할 수 있게 해주기 위해서는 reference(참조자)를 사용해야 한다.  
+
+다음과 같이 사용한다.  
+
+```rust
+fn main() {
+	let s1 = String::from("hi"); 
+	let result = do_func(&s1); // immutable reference
+}
+
+fn do_func(s: &String) -> usize {
+	s.len()
+}
+```
+
+& 연산자를 이용해 함수에 넘긴다. 함수 선언에서도 타입의 앞에 &를 붙여서 참조자를 사용한다는 것을 명시하였다.  
+
+함수의 파라미터를 reference(참조자)로 만드는 것을 borrowing(빌림)이라고 한다.  
+
+기본적으로 borrowing한 reference는 값을 수정할 수 없다.  
+하지만 mut를 통해 값을 수정할 수 있다. 
+다만 이러한 mutable refrence는 한 변수에 대해 하나의 scope안에서 하나만 만들 수 있다.  
+
+즉 아래와 같은 것은 불가능하다.  
+
+```rust
+fn main() {
+	let mut s1 = String::from("hi");
+	let r1 = &mut s1;
+	let r2 = &mut s2; // Error!!
+}
+
+```
+
+이는 data race를 방지하기 위함인데 여기서는 자세히 몰라도 된다.  
+immutable refrence `ex: let s1 = &s1;` 는 data race가 발생하지 않으므로 하나의 scope내에서 여러번 선언할 수 있다.  
+그리고 Rust는 dangling pointer도 방지해준다.  
+
++ Refrence 규칙 요약
+	+ 한 변수에 대해 아래 2가지중 하나만 사용 가능
+		+ N개의 immutable reference	
+		+ 한 변수에 대해 한 스코프 안에서 하나의 mutable reference만 선언 가능 
+
+
+
+## Slice  
+
+- String Slice
+
+다음과 같이 사용할 수 있다.  
+
+```
+&변수명[startIdx..endIdx];   
+```
+
+start부터 시작하여 end이전까지(end는 포함하지 않는) 범위를 의미한다.  
+다만 start가 0이면 생략가능하다. 그리고 String의 마지막 바이트까지 포함을 의미하려면 endIdx의 값도 생략가능하다.  
+
+```rust
+let s1 = String::from("hello world");
+let s2 = &s1[0..5];
+let s3 = &s1[..5]; // s2와 같은 의미이다.  
+```
+
+
+String lieteral은 immutable refrence 즉 &str 이다. 
+
+```rust
+let s = "Hello World";
+```
+
+- 배열 슬라이스  
+
+```rust
+fn main() {
+    let a = [1,2,3,4,5];
+    let slice = &a[1..3];  // 소유권은 여전히 a, slice는 [2,3,] 값만 빌려옴.
+    println!("a is {:?}", &a[..]);
+    println!("slice is {:?}", &slice[..]);
+}
+```
+
+
+## References  
+- https://rinthel.github.io/rust-lang-book-ko/ch04-01-what-is-ownership.html
+- https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html
+-  https://hanbum.gitbooks.io/rustbyexample/content/variable_bindings/scope.html
+- [rust array 출력 방법](https://stackoverflow.com/questions/33036859/why-does-println-work-only-for-arrays-with-a-length-less-than-33)
+- [Heap slower than Stack](https://gribblelab.org/CBootCamp/7_Memory_Stack_vs_Heap.html)
