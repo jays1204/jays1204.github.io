@@ -1,0 +1,44 @@
+---
+layout: post
+title: " git commit date & author date "
+date: 2021-02-25 20:30:12
+categories: git
+---
+
+# git commit
+요즘 일을 할땐 보통 커밋을 먼저 하는 편이다.   
+무슨 말인고 하니, 우선 내가 이번에 작성할 기능을 정하고, 그리고 개행하나 정도 추가한 커밋을 한다.   
+이때 커밋 메세지를 작성할때 제목에는 지라 티켓 번호와 간단한 설명을, 그리고 세부 내용에는 만들 로직에 대한 설명을 메세지로 작성한다. 
+그리고 내가 작성한 내역에 대해 코드를 추가하면서 지속적으로 commit --amend를 하여 커밋 하나를 완성하는 방식으로 일을 하고 있다.  
+
+이렇게 하루 동안 일을 마치고 나면 tig를 이용하여 내가 작성한 커밋 내역을 보며 각 지라 티켓마다 얼마의 시간이 걸렸는지 파악한다.  
+그리고 이 파악한 시간을 지라 티켓마다 일한 시간을 기록하는데 사용한다.  
+
+보통은 하루에 한 두개의 지라 티켓을 처리하여 별다른 문제는 없었다.  
+그러다 tig를 이용하여 오늘 커밋 목록을 보며 이상한 점을 발견하였다.  
+
+분명 내 기억으로는 오후 4시쯤에 티켓 A에 대해 최종적으로 commit을 ammend하고 다음 티켓 B로 넘어갔다.  
+그런데 막상 tig를 통해보면 티켓 A의 시각이 오후 2시로 보이는 것이었다.  
+내가 이 티켓을 이리 빨리 끝냈을리가 없을텐데 참 이상했다.  
+분명 commit --amend를 하면 새로운 커밋 id가 생성되어 커밋한 시간이 변경되는 것으로 알고 있었는데 말이다.  
+
+다행이 트위터에 쓴 이 넋두리를 유명하신 전문가분께서 정보를 알려주셔서 이 문제를 알 수 있었다.  
+알려주신 정보는 아래와 같다.  
+commit --amend를 할때 author date는 변경되지 않고 commit date가 변경됩니다.  
+
+# author date & commit date  
+몰랐다. commit에 date가 여러 개 있다는 것을 말이다.  
+그래서 바로 관련 정보를 검색했고 둘에 관한 간단한 차이를 정리해 두고자 한다.   
+
+author date는 original commit이 만들어졌을때 생성된 시각으로 commit --amend로는 변경되지 않는다고 한다.  
+--date  옵션을 이용해 변경할 수 있다고는 하는데 시도해보지는 않았다.   
+
+commit date는 commit이 수정될 때마다 해당 시각으로 업데이트 된다고 한다.  
+
+tig에서는 기본적으로 시간을 표시할 때 commit date가 아닌 author date를 보여주고 있고 이로 인해 오늘 일한 시간을 착각할 뻔 했다는 사소한 이야기다.  
+
+예전에 모 선배 개발자분이 넌 사파 개발자야 라고 했던 기억이 떠오르는 순간이었다.  
+
+# References
+- https://stackoverflow.com/questions/11856983/why-git-authordate-is-different-from-commitdate
+- https://stackoverflow.com/questions/21531643/how-to-display-commitdate-instead-of-authordate-in-tig-main-view
