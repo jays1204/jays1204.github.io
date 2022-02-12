@@ -6,7 +6,6 @@ tagline:
 {% for post in paginator.posts %}
 
 <article class="home">
-
   <span class="post-date">
     {% assign d = post.date | date: "%d" | plus:'0' %}
     {{ post.date | date: "%B" }}
@@ -42,7 +41,6 @@ tagline:
 <hr/>
 
 <ul class="pager"> 
-
   {% if paginator.previous_page %}
   <li class="previous">
     {% if paginator.previous_page == 1 %}
@@ -70,5 +68,4 @@ tagline:
     <a>Older &rarr;</a>        
   </li>
   {% endif %}
-
 </ul>
