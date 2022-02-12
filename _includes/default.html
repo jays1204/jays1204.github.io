@@ -7,8 +7,6 @@
 
         <meta property="og:title" content="{{ page.title }}">
 
-        <!-- 아이템을 식별하기 위해 사용하시는 유일한 키를 입력해 주셔야 하며, 영문 숫자 일부 특수문자(&=_/-.)를 입력하실 수 있으며, 동일한 아이템의 경우, PC와 모바일에서 동일한 아이템 ID 값을 가져야 합니다. 최대 64자 -->
-        <meta property="dable:item_id" content="{{ page.id }}">
 
 <!-- 아이템 URL (필수): 필요없는 파라미터들은 빼고 입력해주세요 -->
 
@@ -18,9 +16,6 @@
 
 <!-- 아이템 이미지 URL (필수): 크기 800x600, 용량 200KB 이하의 이미지 사용을 권장합니다. 너무 큰 이미지를 입력할 경우 전송 비용이 급증할 수 있습니다. -->
 <meta property="og:image" content="http://jays1204.github.io/img/jays_profile_pic.jpg?s=150">
-
-<!-- 아이템 작성자(기자명) (필수) -->
-<meta property="dable:author" content="{{ site.author.name }}">
 
 <!-- 아이템 카테고리 -->
 <meta property="article:section" content="dev"> <!-- 메인 카테고리 (필수) -->
@@ -56,15 +51,6 @@
 	-->
 
 	<link rel="alternate" type="application/rss+xml" title="{{ site.name }}" href="{{ site.BASE_PATH }}/feed.xml">
-  <script>
-    (function(d,a,b,l,e,_) {
-      d[b]=d[b]||function(){(d[b].q=d[b].q||[]).push(arguments)};e=a.createElement(l);
-      e.async=1;e.charset='utf-8';e.src='//static.dable.io/dist/plugin.min.js';
-      _=a.getElementsByTagName(l)[0];_.parentNode.insertBefore(e,_);
-    })(window,document,'dable','script');
-dable('setService', 'jays1204.github.io');
-dable('sendLog');
-  </script>
 </head>
 
 <body>
