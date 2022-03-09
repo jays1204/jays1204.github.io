@@ -57,7 +57,7 @@ module.exports = {
 };
 
 // app.js express main app
-const { als } = require(./als');
+const { als } = require('./als');
 
 ...
 // 가장 먼저 실행되는 middleware에 선언하길 권장
@@ -72,7 +72,7 @@ app.use((req, res, next) => {
 });
 
 // userService.js
-const { als } = require(./als');
+const { als } = require('./als');
 ...
 function register(userData) {
   ...
