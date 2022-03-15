@@ -1,0 +1,88 @@
+---
+layout: post
+title: " javascript closure "
+date: 2022-03-15 12:48:01
+categories: javascript, closure
+---
+
+# Closure  
+난 Closure를 사용하지 않는다. 하지만 이에 대해 질문을 너무 받아서 공부하여 정리한다.  
+Closure는 함수안에서 함수를 호출하는 것이며 이때 변수 scope을 유지하는, 즉 실행 컨텍스트를 유지될때 를 말한다. 즉 함수와 scope을 같이 들고 다닌다고 생각하면 된다.   
+더 풀어쓰면 함수 A안에 함수 B를 선언하여 리턴할때 B가 A내의 scope(변수, 함수 값)를 기억하게 되어 함수 A밖에서도 해당 scope의 값을 사용할 수 있는 것이다.  
+
+다음과 같은 코드가 바로 Closure 이다.   
+
+```javascript
+function A(cnt) {
+  let undici = 11;
+  function B() {
+    return  undici + cnt;
+  }
+  return B;
+}
+
+const d1 = A(10);
+console.log('aaaa', d1());
+const d2 = A(20);
+console.log('aaaa', d2());
+```
+
+d1, d2는 B함수이다. 그리고 클로저를 이용함에 따라 A함수 밖으로나와서도 undici 변수를 기억하여 사용할 수 있다.  
+
+아니면 아래와 같이 토글 상태를 기억하게 할 수도 있다.  
+
+```javascript
+function to(cnt) {
+  let toggle = true;
+
+  function ggle() {
+    toggle = !toggle;
+    return  !toggle;
+  }
+  return ggle;
+}
+
+const d1 = to();
+console.log('aaaa', d1());
+console.log('aaaa', d1());
+```
+
+
+참고로 함수 실행이 아닌 선언 시점에 변수의 범위가 결정되는 것을 lexical scope이라고 한다. 
+자바스크립트는 lexical scope이며 const, var는 함수 단위의 scope을 갖고, let은 block 단위의 scope을 갖는다.  
+closure를 이용하여 이 lexical scope을 기억하게 하면 함수밖에서도 scope을 유지시킬수 있다. 
+
+
+# Typescript private variable
+
+아래와 같은 Animal 클래스가 있고 name이 private 변수로 선언되어있다고 하자.   
+
+```typescript
+class Animal {
+  private name: string;
+ 
+  constructor(theName: string) {
+    this.name = theName;
+  }
+}
+```
+
+이 typescript는 javascript로 다음과 같이 트랜스파일된다.   
+
+```javascript
+var Animal = /** @class */ (function () {
+    function Animal(theName) {
+        this.name = theName;
+    }
+    return Animal;
+}());
+```
+
+private 변수를 만들어주기위해 clousre를 사용했다. 
+
+## 주의점
+마지막으로 Closure 사용시 주의할 점은 Closure를 다사용하고 난 이후에는 명시적으로 null 등을 assign해주어야 한다. 그렇지 않으면 GC 대상이 되지 않으므로 메모리 부족을 유발시킬 수 있다.  
+
+## References
+- https://developer.mozilla.org/ko/docs/Web/JavaScript/Closures
+- https://poiemaweb.com/js-closure
