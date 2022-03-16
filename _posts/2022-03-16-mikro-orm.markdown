@@ -1,0 +1,357 @@
+---
+layout: post
+title: " Mikro-ORM 간단 소개"
+date: 2022-03-16 11:41:19
+categories: typescript, nodejs, orm, mikro-orm
+---
+
+이 글은 Mikro-ORM의 소개 글을 간단하게 번역 및 정리한 글이다.  
+Nest.js에 어떤 ORM을 사용할지 고민하던차에 Mikro-ORM을 발견하게 되었고 사용하기로 결정했다. Prisma, Typeorm 등이 있는데 이를 배제한 이유는 어떤 부분은 개인 취향, 어떤 부분은 테스트의 불편함 등이다.  
+어찌되었든 현재는 Nest.js 기반의 monorepo에 mikro-orm을 이용하여 개발을 막 시작하였다.  
+짧은 영어실력과 한정된 시간에 만든 문서라 틀린점이 있을 수 있다.  
+
+# Entity 정의  
+- persist flush
+    - perists는 새로운 엔티티를 만들어서 미래에 저장하기 위해 쓰인다. Entity Manaer(이하 em)에 의해 관리되다가 flush가 호출되면 그때 db에 저장된다. 
+    - flush는 em에 의해 관리되는 엔티티들의 모든 변경사항을 DB에 반영한다.
+
+# Unit Of Work
+문서에서는 uom 의 약어로 쓰이기도 한다.  
+- id값을 이용하여 entity를 find하면 내부적으로 관리하는 identify MAP(이하 id map)에는  DB에서 가져온 데이터를 이용하여  생성한 인스턴스를 기록해둔다.  
+- 이후 동일한 id를 갖는 record를 찾을때는 id map에 이미 생성되어있는 같은 인스턴스 돌려준다. 즉 id map에 이미 데이터가 존재하면 DB에 쿼리를 보내지 않고 이미 같은 pkid의 인스턴스 존재하면 인스턴스를 새로 만들지 않고 기존걸 그대로 쓴다.  
+- 이를 통해 DB 부하를 줄일 수 있는 장점이 생긴다.  
+
+# Entity Manager
+기본적으로 데이터는 entity manager(이하 em)에 의해 관리된다.
+entity manager가 DB와 App 사이 중간 계층이라고 보면된다.  
+추가 수정 삭제 등의 변경 사항도 em에서 관리하다가 flush할때 DB에 반영한다. 그전까지는 em에서만 해당 변경 내역을 들고 있다.  
+
+- em에서는 검색 결과에 대해 identity map이라는 내부 저장소에 캐싱해두고 이를 재활용한다.
+    - pkid 을 키로 해서 캐시해둠.
+    - 따라서 pkid로 검색하면 이미 map에 있으면 그대로 리턴, 아니면 DB에 질의, 대신에 가져온 결과가 map에 잇으면 인스턴스 새로 만드는게 아니고 기존거 리턴
+- em.claer() 통해서 ID Map에 있는 캐시 데이터들 다 제거할 수 있다.
+- entity manager를 올바르게 사용하기 위해서는 task 단위마다 초기화 필요하다.   
+- 초기화 방법   
+```javascript
+const em = orm.em.fork();
+```   
+
+예를 들어 새로운 request마다 또는 job 실행시마다 또는 큐 데이터 consume할때마다 fork를 하여 새로운 context를 갖는 깨끗한 em을 얻도록 한다.    
+만일 새로운 request에 대해 초기화를 해주지 않는다면 이전 리퀘스트에서 layzy loading등으로 가져온 데이터가 이번 request에서 영향을 끼칠수 있다.  
+그리고 메모리 사용도 지속적으로 증가하게 되므로 초기화해주는게 좋다.  
+
+## Entity references
+Entity 사이에 연관 관계(Relation)이 있을때 사용한다.
+
+- 모든 단일 엔티티 관계는 엔티티 레퍼런스를 매핑한다. 레퍼러선스는 아이디를 갖는 엔티티를 말한다. 이 레퍼런스는 id map에 저장되어있어서, 같은 데이터 가져올땐 같은 객체를 꺼내 쓸수 있다. 즉 객체 재활용이 된다.
+- 레퍼런스는 기본적으로 식별자(즉 id)정보만 있다.
+- Reference 타입 객체의 경우 wrap().init 통해서 엔티티를 초기화할수 있다. 이건 데이터베이스를 호출하고 데이터 객체 만들고 ID map에 객체를 유지하게 한다.
+- Reference 타입 객체를 사용할때 엔티티의 값들을 확인하려면 initialized 되었는지 확인이 필요하다.  위에서 언급했다시피 기본적으로는 id 정보만 갖고 있다.  
+    - ex) `ref.initialized()`
+- Reference Type으로 가져오려면 다음과같이 wrapped에 대해 true 설정을 해줘야한다.
+    - `const article = this.orm.em.getReference<Article>(Article, 1, {wrapped: true});`
+- Reference Type이 아니면 initialized등의 method를 사용할 수 없다.
+    - 그리고 Reference도 역시 em을 통해서 처리되므로 이미 DB에서 한번 가져온 데이터(즉 EM의 ID map에 있는)는 레퍼런스더라도 id가 아니라 데이터가 모두 존재하는 형태로 응답된다.
+    - 즉 wrap().init을 통해 엔티티 데이터를 추가적으로 조회하지 않아도 된다.
+
+- Reference 타입은 다음에 대해 유용하다.
+    - 타입스크립트 컴파일러는 원하는 엔티티가 항상 로딩된다고 간주한다.
+    - book, author 가 있고 두개 사잉 relation이 있다는 가정하에, book.author가 항상 로딩되어있다고 간주하고 있어서 book.author.name 과 같이 호출했을때 컴파일 시점에 이것이 에러임을 알려줄수 없다.
+    - 이때 Reference Type을 사용하면 에러를 잡아낼수 있다.  wrap: true 또는 칼럼 설정에서 wrappedReference: true 설정하여 reference 타입으로 가져오게 하면 book.author.name 과 같은 구문은 에러로 표시된다. load 등을 이용하여 데이터를 불러올수 있다.
+        - unwrap을 이용하면 엔티티 칼럼들에 접근가능하지만 어차피 값이 안나온다.
+    - ex)  
+
+```javascript
+const book = await orm.em.findOne(Book, 1);
+console.log(book.author.unwrap().name); // unwrap 통해 name접근, 하지만 undefined
+console.log((await book.author.load('name'))); // name 만 불러옴
+console.log((await book.author.load()).name); // 위에서 불러와서 출력됨
+console.log(book.author.unwrap().name); // 이미 데이터 불러놔서 name 접근 및 값 획득 가능
+```  
+        
+- 엔티티 설정에서 칼럼에 대해 Reference 타입으로 설정해두었으면 실제 사용할때 assign도 Reference Type을 해야한다.
+- 이때 Reference.create() 등을 이용할 수 있다.
+  - ex)  
+
+```javascript
+  const book = await orm.em.findOne(Book, 1);
+  const repo = orm.em.getRepository(Author);
+
+  book.author = repo.getReference(2, { wrapped: true });
+
+  // 아래 줄은 위의 book.author = repo.getReference(2, { wrapped: true }); 와 같다.
+  // book.author = Reference.create(repo.getReference(2));
+  await orm.em.flush();
+```
+
+- 이미 엔티티가 있다면 toReference 이용해서 처리할 수도 있다.
+  - ex)    
+
+```javascript
+const author = new Author(...)
+book.author = wrap(author).toReference();
+```
+
+- IdentifiedReference 란 무엇인가?
+  - 이건 Reference Type에 primary key 속성을 의미하는 타입으로 보면 된다. pk가 id, uuid, _id 등의 포맷이라면 별도의 설정없이도 IdentifiedReference 에서는 ID는 바로 알 수 있다. (물론 추가 설정 통해 pk 이름이 위 형태들이 아니어도 가능하다)
+  - 현재까지 파악한바로는 Refernce Type과 큰 차이는 없고 연결된 키가 unique가 아닌 pk라는걸로 의미하는걸로 보인다.
+
+## Collection
+- OneToMany, ManyToMany 는 Collection 타입으로 감싸서 처리된다. 이 Collection 타입은 for of를 통해 목록 순회가 가능하다.
+    - 또는 배열 처림 [] 를 이용하여 접근할 수도 잇다.
+    - Collection 타입에 값 추가는 add method 이용해서만 가능하며 [index] = 값; 와 같이 기존 배열처럼 할당은 되지 않는다.
+    - Collection은 get* 형태의 method들을 지원하는데 entity가 로딩되지 않은 상태(값 조회안한)에서 get* method를 호출하면 에러가 발생한다.
+- 연관관계에 있는 Collection은 init() method를 통해서 데이터를 lazy lodaing하는게 기본 설정이다.
+- ManyToMany 면 Pivot 테이블 사용한다.
+    - 테이블이 따로 생성됨.
+- Collection 아이템들 정렬 순서 변경
+    - fixedOrder:true 설정으로 기본적으로는 id 순으로 정렬, fixedOrderColumn 설정을 통해 변경 가능
+- add, remove의 전파
+    - 관계 설정이 양방향으로 되어있다면 한 entity에서 add, remove한 내역이 연결된 다른 엔티티에도 반영된다.
+    - 양방향일땐 owner로 설정된 entity에서 add, remove 처리하는걸 권장한다.
+- init 통해서 데이터 가져올때 where, orderBy 조건 추가 가능
+- matching method
+    - 기본적으로는 where, limit 등 조건문이라고 보면된다. 쿼리가 실제로 수행된다.
+    - store: true 설정해서 호출하면 획득한 값들은 readonly가 된다.
+
+## Entity Repository
+- Entity Manager를 감싸서 만든 도구이다.
+    - 호출을 기본적으로 Entity Manager로 전달한다.
+- EntityManager와 다르게 find 등을 할때 Type을 넘겨주지 않아도 된다.
+    - 이미 entity type 정보를 갖고 있기때문이다.
+- 항상 호출시마다 flush한다. 따로 flush를 해주지 않아도 된다.
+- 단점은 v4 버젼 이후로 EntitryRepository가 driver에 종속된다.
+    - ex) `import { EntityRepository } from '@mikro-orm/mysql';`
+- Custom Repository를 만들수도 있다.
+    - 기본 EntityRepository를 extends하는 것이다. 클래스 생성후 해당 클래스 정보를 Entity decorator에 설정해주어야 한다.
+    - ex) `@Entity({ customRepository: () => CustomAuthorRepository })`
+    - cb내에서 Repository 전달하는건 순환참조시 문제를 막기 위해서이다.
+- getRepostiroy에서 의도한 타입 얻기
+    - Entity에 EntityRepositoryType 설정하여 할수 있다.
+        -  ex)  
+        
+```javascript
+@Entity({ customRepository: () => AuthorRepository })
+export class Author {
+
+  [EntityRepositoryType]?: AuthorRepository;
+
+}
+```  
+    - 아니면 초기화할때 다음처럼 할 수도 있다.
+        - `MikroORM.init({ entityRepository: CustomBaseRepository })`
+
+## Transaction
+
+- Mikro-Orm에서 모든 write(INSERT/UPDATE/DELETE) 동작은 엔티티 매니저의 flush가 호출될때까지 큐잉되고 flush가 호출되면 그때 단일 트랜잭션으로 처리된다.
+    - entity manager는 write에 대해서는 기본이 transaction 사용이다.
+- entity manager의 flush를 이용하여 트랜잭션을 처리할 수도 있고 아니면 명시적으로 선언할수도 있다.
+    - orm.em.transactional
+    - 위의 method를 이용하여 명시적으로 트랜잭션 시작과 끝을 구분짓는다. 해당 method는 callback을 인자로 갖고 callback내에서 트랜잭션에 포함될 처리들을 하고 persist를 호출하여 마무리한다.
+        -  ex)
+        
+```javascript
+await orm.em.transactional(em => {
+  //... do some work
+  const user = new User(...);
+  user.name = 'George';
+  em.persist(user); // new 가 아니면 없어도됨.
+});
+```
+
+또는 em.begin, em.commit, em.rollback 등을 이용하여 더 명시적으로 트랜잭션을 사용할수도 있다.  
+
+- 예외 처리
+    - 암시적인 트랜잭션 사용할때 flush에서 익셉션가 발생하면 트랜잭션은 자동으로 롤백된다.
+    - 명시적인 트랜잭션 사용할때 익셉션이 발생하면 트랜잭션은 롤백되어야한다. (begin일때는 명시적으로 롤백 필요, transaction method로 열었을때는 에러나면 자동으로 롤백됨)
+        - catch에서 rollback하고 다시 해당 exception throw하는걸 권장한다.
+    - 에러 발생하였을때 주의할점은 EntityManager가 ID Map에 갖고 있는 객체는 롤백되지 않는다는 점이다.
+        - 즉 DB에는 롤백된 상태로 남아있지만 ID Map에는 롤백이전의 과정중에 설정된 값이 남아있게 된다.
+        - entity Manager를 fork를 이용하여 새로운 것을 사용하게 설정해주어야 한다.
+        - ex)  
+
+```javascript
+const user = await this.userRepository.findOneOrFail({ email });
+
+    try {
+      await this.em.transactional(async (em) => {
+        user.username = 'nonono3';
+        if (true) {
+          throw new Error("eeeee tmpe")
+        }
+      });
+    } catch (e) {
+      console.log('eeee')
+    }
+  //만일 여기서 userRepository 그대로 이용하면 Id map에 nonono3이 남아있어 해당 값을 업데이트가 도된다.
+  const user3 = await this.userRepository.findOneOrFail({ email });
+// 위 find 실행시 flush때문에 사용자 이름이 nonono3으로 변경됨.
+
+// 따라서 아래와 같이 새로운 em 필요
+const em = this.em.fork({});
+const dd = await em.findOne(User, 1); // DB 정보로 구성됨
+```
+            
+- Optimistic Lock
+    - verision 칼럼 추가해서 동시성 제어
+    - verison이 안맞으면 롤백처리됨
+- Pessimistic Lock
+    - PESSIMISTIC_WRITE 등을 이용해서 잠금 지원
+- Isolation  level 지원
+    - 트랜잭션 시작시 아이솔레이션 레벨 설정 가능하도록 지원
+
+
+## 상속 매핑
+
+- 엔티티 설정에 대해 상속 가능
+- Single Table Inheritance 지원
+    - 해당 전략 사용할경우 추가 학습 필요
+
+## Cascading
+
+- relation 설정에 대해 cascading 지원
+    - 기본적으로 cascading 사용으로 간주 되어있어서 사용하지 않으려면 설정 필요
+        - ex) cacasde: []
+    - app에서 사용하지 않을 예정.
+        - 데이터 생성, 수정, 삭제는 모두 명시적으로 선언해서 사용하는게 좋다.
+
+## Filter
+
+- 엔티티에 대해 미리 필터를 정의할수 있다.
+    - 필터를 기본으로 사용하게할 수도 있고 아니면 find* method 호출할때 미리 정의된 필터중 어떤 것을 사용할지 정할수도 있다.
+- 필터는 3가지 요소로 설정
+    - name:  나중에 find* 에서 어떤 필터 쓸지 설정할대 쓸 식별자
+    - cond: 필터에 사용될 조건문
+        - callback으로 정의될 수도 있다. 이때 callback은 3개의 arg를 갖는다.
+            - args, type, em
+    - default: 모든 쿼리에 대해 기본적으로 설정할지 말지 여부
+- 필터는 엔티티 단위로도 실행되게 설정할수 있고, 엔티티 매니저 단위로도 설정할 수 있다.
+- 필터는 relation 설정된 entity에는 적용되지 않는다.
+- 필터 이름은 가능하면 서로 다른 엔티티라도 유니크하게 쓰는게 좋다.
+    - A, B 엔티티에 fil 라는 필터 있고 이 필터를 find할때 사용하면 A, B 엔티티에 대해 둘다 적용되버림.
+        - ex
+        
+```javascript
+const authors = await orm.em.find(Author, {}, {
+  populate: ['books'],
+  filters: { tenant: 123 },
+});
+```
+        
+
+## Query Builder
+
+- raw query 직접 실행하길 원하거나 직접 쿼리 작성할때 사용 가능
+    - entityManager이용하여 query build를 만들고 해당 qb에 대해 udpate, where 등 이용해서 쿼리 문 설정 이후 execute 이용하여 실행
+        - 쿼리가 어떤게 생성될지, 파라미터 뭐 쓸지도 조회할 수 있다.
+- excute 실행시 실제 DB칼럼 이름으로 정보를 생성할수도 아니면 엔티티에 선언된 이름으로 가져오게 할지도 설정할 수 있다.
+- execute가 아닌 insert, count, update 등을 이용해서 호출하고 await하면 응답 결과의 타입이 호출에 따라 달라진다. count는 number, update는 QueryResult 타입을 갖는다.
+- raw results를 Entity 타입으로 바꿔주는 기능도 제공해준다.  ex) json → entity , 이때 필드명도 엔티티 설정에 맞게 변경해준다.
+    - 현재로서는 쓸 일은 없어보인다.
+- entity 설정에 따라 자동으로 join도 지원한다.
+    - join을 qb에 명시하지 않아도 qb에 설정된 쿼리가 join이 필요하면 자동으로 join한다.
+    - 물론 .join() 을 이용하여 명시적으로 join을 설정할수도 있다.
+- query builder의 다양한 사용방법과 method는 아래 링크 참고
+    - [https://mikro-orm.io/docs/query-builder#mapping-joined-results](https://mikro-orm.io/docs/query-builder#mapping-joined-results)
+
+## Result Cache
+
+- MikroORM은 기본적으로 결과에 대해 메모리 캐싱한다. (id map)
+    - entityManager의 find*, count* 에 대해 캐시한다.
+    - QueryBuilder의 결과도 마찬가지이다.
+- MikroORM 인스턴스 하나에 대해 공유하고 기본 ttl은 1초이다.
+- 캐시 ttl 값이나 메모리가 아닌 다른 스토리지 쓸지 등도 MikroORM init할때 변경할 수 있다.
+    - 또한 캐시 키도 find* 할때 설정하여 em의 clearCache 통해서 캐시를 명시적으로 제거할수도 있다.
+
+## Logging
+
+- 로깅 설정도 다양하게 할 수 있다.
+    - 로깅 레벨 설정도 당연히 가능하다.
+- 외부 로거와도 연결할 수 있다.
+
+## Deployment
+
+typescript source 없이 compiled 파일만 배포하려하면 실패할 수도 있다. 
+
+기본적으로 temp 디렉토리에 엔티티 메타데이터들이 저장된다. 이걸 배포앱에서 재사용할수도 있다.
+
+- 제일 쉬운 방법은 ts source file들도 다같이 배포하는거다.
+
+## 다양한 Where 조건
+
+- 다양한 조건들을 중첩해서 사용할 수 있다.
+    - [https://mikro-orm.io/docs/query-conditions#list-of-supported-operators](https://mikro-orm.io/docs/query-conditions#list-of-supported-operators)
+
+## Loading 전략
+
+- Loading전략인 LoadStrategy 에는 SELECT_IN, JOINED가 있다.  기본은 SELECT_IN 이다.
+    - SELECT_IN
+        - Relation 엔티티들까지 같이 가져올때 여러개의 쿼리로 나누어서 진행한다.
+        - 첫번째로는 루트 엔티티를 가져오는 쿼리 실행, 그리고 이후 relation 엔티티 가져오는 쿼리 실행으로 처리된다.
+            - ex)  
+
+```sh
+[MikroORM] [query] select `u0`.* from `user` as `u0` where `u0`.`id` = 1 limit 1 [took 2 ms]
+[MikroORM] [query] select `a0`.* from `article` as `a0` where `a0`.`author_id` in (1) order by `a0`.`author_id` asc [took 2 ms]
+```  
+
+
+  - JOINED
+    - JOIN이용하여 하나의 쿼리로 진행된다.
+    - ex)  
+
+```sh
+[MikroORM] [query] select `u0`.`id`, `u0`.`username`, `u0`.`temp`, `u0`.`email`, `u0`.`bio`, `u0`.`image`, `u0`.`password`, `a1`.`id` as `a1__id`, `a1`.`slug` as `a1__slug`, `a1`.`title` as `a1__title`, `a1`.`description` as `a1__description`, `a1`.`body` as `a1__body`, `a1`.`created_at` as `a1__created_at`, `a1`.`updated_at` as `a1__updated_at`, `a1`.`tag_list` as `a1__tag_list`, `a1`.`author_id` as `a1__author_id`, `a1`.`favorites_count` as `a1__favorites_count`, `c2`.`id` as `c2__id`, `c2`.`created_at` as `c2__created_at`, `c2`.`updated_at` as `c2__updated_at`, `c2`.`body` as `c2__body`, `c2`.`article_id` as `c2__article_id`, `c2`.`author_id` as `c2__author_id` from `user` as `u0` left join `article` as `a1` on `u0`.`id` = `a1`.`author_id` left join `comment` as `c2` on `a1`.`id` = `c2`.`article_id` where `u0`.`id` = 1 [to
+```
+        
+- 이 설정은 Entity의 각 칼럼마다 설정할수도 있고 MikroOrm 인스턴스(글로벌)에 대해 설정할 수도 있다.
+    - 또는 find*()를 호출할때 마다 strategy를 설정할 수도 있다.
+
+## 직렬화
+
+- toOjbect와 toJSON을 사용한다.
+    - 둘다 interface라서 entity에 구현해주어야한다.
+    - BaseEntity extends하면 이미 구현되어있어서 그대로 쓰면 된다.
+- entity 설정에서 Property에 대해 hidden: true 처리하면 직렬화 method를 거친 이후에는 해당 필드는 보이지 않게 된다.
+    - 반대로 DB에는 반영되지 않고 앱 메모리에만 유지되는 속성은 persist: false 통해서 처리가능하다.
+
+## Base Entity
+
+- IWrappedEntity 는 유용한 method들이 구현되어있다.
+    - toJSON, isInitialized 등
+- 엔티티에서 이걸 사용하려면 2가지 방법이 있다.
+    - 하나는 wrap()을 이용하여 데이터 조회, 또하나는 Entity 선언시 BaseEntity extends해서 선언하는것이다.
+
+## Events
+
+- 다양한 훅을 걸 수 있다. DB entity에 대한 훅은 선호하지 않고 로직 흐름 파악이 어려워서 안쓴다.
+    - [https://mikro-orm.io/docs/events](https://mikro-orm.io/docs/events)
+
+## Embeddable
+
+- 여러 칼럼을 묶서어 관리할 수 있다. 어느정도 그룹으로 만들수 있는 것들을 클래스로 따로 만들어두면 클래스에서 관리는 편할 수 있다.
+    - extends와 다른건 embeddable에 선언된 칼럼은 DB의 칼럼명에는 prefix가 붙는다는 것이다.
+- 이걸 사용할때 장단점은 잘 모르겠다.
+- [https://mikro-orm.io/docs/embeddables](https://mikro-orm.io/docs/embeddables)
+
+## Entity Metadata
+
+엔티티 메타데이터는 보통 temp에 있는 json을 이용하여 얻게된다.
+
+## 네이밍 전략
+
+- 기본은 UnderscoreNamingStrategy 로 DB에 언더스코어 기반으로 접근한다.
+    - 이외에도 다른 전략들 또는 커스텀한 전략도 설정가능하다.
+    - MyTable과 같이 선언하면 기본전략에 따라 my_table의 이름으로 생성된다.  
+    
+
+## Property Validation
+
+- MikroOrm은 property 를 DB로 보내기전에 validtion을 한다. 타입이 안맞는 정도는 자동으로 타입 변환해서 보내준다. 다만 이런게 아니라 아예 형태 변환이 안되는 등의 경우면 에러를 던지게한다.
+
+
+## End  
+위와 같이 정리한 바를 토대로 개발해보면서, 운영해보면서 겪게되는 이슈는 기회되면 다시 적을 예정이다.  
+
+# References 
+- https://mikro-orm.io/docs/defining-entities
