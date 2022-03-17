@@ -60,22 +60,38 @@ closure를 이용하여 이 lexical scope을 기억하게 하면 함수밖에서
 ```typescript
 class Animal {
   private name: string;
- 
-  constructor(theName: string) {
-    this.name = theName;
+
+  getName() {
+      return this.name;
+  }
+
+  setName(ss) {
+      this.name = ss;
   }
 }
+
+const aa = new Animal();
 ```
 
 이 typescript는 javascript로 다음과 같이 트랜스파일된다.   
 
 ```javascript
 var Animal = /** @class */ (function () {
-    function Animal(theName) {
-        this.name = theName;
+    function Animal() {
     }
+    Animal.prototype.getName = function () {
+        return this.name;
+    };
+    Animal.prototype.setName = function (ss) {
+        this.name = ss;
+    };
     return Animal;
 }());
+var aa = new Animal();
+
+console.log('11111', aa.getName());
+console.log('22222', aa.setName('hihi'));
+console.log('33333', aa.getName());
 ```
 
 private 변수를 만들어주기위해 clousre를 사용했다. 
