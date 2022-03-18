@@ -353,5 +353,8 @@ typescript source 없이 compiled 파일만 배포하려하면 실패할 수도 
 ## End  
 위와 같이 정리한 바를 토대로 개발해보면서, 운영해보면서 겪게되는 이슈는 기회되면 다시 적을 예정이다.  
 
+## 추가 내용 03-18
+- One-to-Many에 대해 unidirectinoal 로는 설정 불가하다고 한다. 
+  - https://github.com/mikro-orm/mikro-orm/discussions/2928
 # References 
 - https://mikro-orm.io/docs/defining-entities
